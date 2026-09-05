@@ -227,3 +227,10 @@ runs/
 *.bin
 *.safetensors
 .DS_Store
+
+# --- 프로젝트 고유 ---
+# raw_text.py가 저장소 루트에 받는 코퍼스 사본 (정본은 data/)
+/the-verdict.txt
+# Raschka 공식 저장소 원본 — 참조용이며 내 작업물이 아니다
+docs/LLMs-from-scratch-main/
+docs/LLMs-from-scratch-main.zip

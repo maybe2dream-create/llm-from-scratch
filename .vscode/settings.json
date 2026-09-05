@@ -1,0 +1,14 @@
+{
+  // 이 폴더를 열면 항상 프로젝트 가상환경의 파이썬을 쓴다.
+  // (ModuleNotFoundError: No module named 'torch' 의 대부분이 이것 때문이다)
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+
+  // 테스트 탭에서 pytest를 바로 돌릴 수 있게 한다.
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["tests"],
+
+  // 저장할 때 코드를 자동으로 고치지 않는다 — 의도적이다.
+  // 손으로 친 코드가 손으로 친 그대로 남아야 무엇을 틀렸는지 보인다.
+  "editor.formatOnSave": false
+}
