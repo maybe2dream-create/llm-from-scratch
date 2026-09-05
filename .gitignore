@@ -234,3 +234,6 @@ runs/
 # Raschka 공식 저장소 원본 — 참조용이며 내 작업물이 아니다
 docs/LLMs-from-scratch-main/
 docs/LLMs-from-scratch-main.zip
+# PDF는 바이너리라 diff가 안 되고 갱신할 때마다 이력에 통째로 쌓인다.
+# 원본 .md만 커밋하고 PDF는 로컬에 둔다.
+docs/*.pdf
