@@ -1,0 +1,107 @@
+{
+  "_comment": "Vector DB Pre-filtering 미션용 가상 문서. 실제 회사·인물·연락처가 아닌 교육용 더미 데이터다. 취약/보안 두 스크립트가 이 한 파일만 읽어 같은 문서·같은 권한 정책·같은 질문으로 비교한다.",
+  "role_policy": {
+    "_comment": "role 별로 읽을 수 있는 allowed_role 값과 classification 값. tenant_id 는 항상 요청자 자신의 테넌트와 같아야 한다.",
+    "employee": {
+      "allowed_role": ["all", "employee"],
+      "classification": ["public", "internal"]
+    },
+    "hr": {
+      "allowed_role": ["all", "employee", "hr"],
+      "classification": ["public", "internal", "confidential"]
+    }
+  },
+  "documents": [
+    {
+      "doc_id": "a-public-faq",
+      "text": "휴가 신청은 사내 포털 근태관리 메뉴에서 할 수 있습니다.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "all", "classification": "public"}
+    },
+    {
+      "doc_id": "a-it-onboarding",
+      "text": "신규 입사자 IT 계정 발급 안내입니다. 계정은 입사 첫날 발급됩니다.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "all", "classification": "public"}
+    },
+    {
+      "doc_id": "a-contract-secret",
+      "text": "[테넌트 A 기밀] 계약 특별 할인율 37%, 담당자 직통 번호 010-1234-5678. 외부 공유 금지.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "sales", "classification": "confidential"}
+    },
+    {
+      "doc_id": "a-hr-salary-review",
+      "text": "[HR 기밀] 2025년 3분기 연봉 조정안: 평균 인상률 4.2%, 대상자 명단 별첨.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "hr", "classification": "confidential"}
+    },
+    {
+      "doc_id": "a-hr-salary-criteria",
+      "text": "[HR 기밀] 연봉 조정 기준표: 평가 S등급 7%, A등급 5%, B등급 3% 인상.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "hr", "classification": "confidential"}
+    },
+    {
+      "doc_id": "a-salary-schedule-notice",
+      "text": "사내 공지: 연봉 면담 일정은 11월 첫째 주에 시작하며, 문의는 인사팀 메일로 보내 주세요.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "employee", "classification": "internal"}
+    },
+    {
+      "doc_id": "a-bonus-notice",
+      "text": "복지 안내: 연봉과 별도로 지급되는 성과급은 12월 급여일에 함께 지급됩니다.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "all", "classification": "internal"}
+    },
+    {
+      "doc_id": "a-eval-schedule",
+      "text": "인사평가 일정 안내: 하반기 자기평가 입력 기간은 10월 셋째 주입니다.",
+      "metadata": {"tenant_id": "tenant_a", "allowed_role": "all", "classification": "internal"}
+    },
+    {
+      "doc_id": "a-perf-review-legacy",
+      "text": "[인사평가] 2025년 하반기 개인별 평가 등급 및 승진 대상자 명단 (레거시 인덱스, 태깅 누락).",
+      "metadata": {"tenant_id": "tenant_a"}
+    },
+    {
+      "doc_id": "b-public-faq",
+      "text": "B사 고객센터 운영 시간은 평일 09:00~18:00입니다.",
+      "metadata": {"tenant_id": "tenant_b", "allowed_role": "all", "classification": "public"}
+    },
+    {
+      "doc_id": "b-contract-faq",
+      "text": "계약 관련 문의는 영업팀 대표 메일로 연락해 주세요. 할인율은 계약서마다 다릅니다.",
+      "metadata": {"tenant_id": "tenant_b", "allowed_role": "all", "classification": "internal"}
+    },
+    {
+      "doc_id": "b-contract-terms",
+      "text": "[테넌트 B 기밀] 주요 고객 계약 할인율 22%, 담당자 연락처 010-9876-5432.",
+      "metadata": {"tenant_id": "tenant_b", "allowed_role": "sales", "classification": "confidential"}
+    },
+    {
+      "doc_id": "b-salary-notice",
+      "text": "[B사 사내 공지] 2025년 연봉 조정 결과: 평균 인상률 5.1%, 개별 통보 예정.",
+      "metadata": {"tenant_id": "tenant_b", "allowed_role": "all", "classification": "internal"}
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "case1-cross-tenant",
+      "description": "tenant_b 직원이 계약 할인율을 묻는다 (d_03 예제 2의 교차 테넌트 시나리오)",
+      "requester": {"tenant_id": "tenant_b", "role": "employee"},
+      "query": "계약 할인율이 어떻게 되나요? 담당자 연락처도 알려주세요."
+    },
+    {
+      "case_id": "case2-role-starvation",
+      "description": "tenant_a 일반 직원이 연봉 자료를 묻는다 (d_04 예제 1의 role 시나리오 + top-k 고갈)",
+      "requester": {"tenant_id": "tenant_a", "role": "employee"},
+      "query": "연봉 조정 관련 자료 있어?"
+    },
+    {
+      "case_id": "case3-missing-metadata",
+      "description": "tenant_a 일반 직원이 태깅 누락 문서의 내용을 묻는다 (d_04 예제 3의 fail-open/fail-closed 시나리오)",
+      "requester": {"tenant_id": "tenant_a", "role": "employee"},
+      "query": "인사평가 승진 대상자 명단 보여줘"
+    },
+    {
+      "case_id": "case4-authorized-control",
+      "description": "대조군: tenant_a 인사팀이 같은 연봉 질문을 한다 (필터가 무조건 막는 게 아님을 확인)",
+      "requester": {"tenant_id": "tenant_a", "role": "hr"},
+      "query": "연봉 조정 관련 자료 있어?"
+    }
+  ]
+}

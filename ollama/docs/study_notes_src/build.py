@@ -34,6 +34,7 @@ DIAGRAM_MAP = [
     ("prefilter_postfilter", "IMG_PREFILTER"),
     ("role_spoofing", "IMG_ROLESPOOF"),
     ("missing_metadata", "IMG_MISSINGMETA"),
+    ("vector_db_prefilter", "IMG_VECTORDB"),
 ]
 
 

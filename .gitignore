@@ -249,3 +249,5 @@ ollama/docs/study_notes_src/preview/
 ollama/d_03/docs/flow_src/report_final.html
 ollama/d_03/docs/flow_src/diagrams/*.svg
 ollama/d_03/docs/flow_src/preview/
+# 미션 제출용 zip은 이미 커밋된 파일들의 바이너리 사본이다 (PDF와 같은 이유로 제외).
+ollama/**/*.zip

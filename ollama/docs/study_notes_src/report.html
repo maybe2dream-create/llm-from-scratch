@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>LLM Security Study Notes — Prompt Injection, Jailbreaks, Data Leakage & RAG Access Control</title>
+<title>LLM Security Study Notes — Prompt Injection, Jailbreaks, Data Leakage, RAG Access Control & Vector DB Pre-filtering</title>
 <style>
   @page { size: A4; margin: 22mm 18mm 20mm 18mm; }
   * { box-sizing: border-box; }
@@ -14,7 +14,8 @@
     margin: 0;
   }
   .cover {
-    height: 240mm;
+    /* min-height, not height: a fixed-height centered box pushes overflow off the top of the page */
+    min-height: 235mm;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -34,23 +35,23 @@
     padding-left: 16px;
   }
   .cover .meta {
-    margin-top: 30px;
+    margin-top: 20px;
     font-size: 11pt;
     color: #444;
   }
   .cover .meta div { margin-bottom: 6px; }
   .cover .filelist {
-    margin-top: 24px;
+    margin-top: 18px;
     border-top: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
-    padding: 14px 0;
+    padding: 10px 0;
   }
   .cover .filelist .group-title {
     font-size: 9.5pt;
     color: #888;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin: 10px 0 4px 0;
+    margin: 7px 0 2px 0;
   }
   .cover .filelist .group-title:first-child { margin-top: 0; }
   .cover .filelist code { font-size: 10.3pt; }
@@ -194,10 +195,10 @@
 <!-- ===================== COVER ===================== -->
 <div class="cover">
   <div class="kicker">Ollama · Local Small-LLM Security Lab — Study Notes</div>
-  <h1>Eleven Ways a Local LLM Leaks<br>(and What Actually Stops It)</h1>
+  <h1>Twelve Ways a Local LLM Leaks<br>(and What Actually Stops It)</h1>
   <div class="meta">
     <div>Target model: <code class="inline">huihui_ai/qwen2.5-abliterate:1.5b</code> (Ollama, http://localhost:11434)</div>
-    <div>Course folder: <code class="inline">ollama/</code> (<code class="inline">d_01</code> + <code class="inline">d_02</code> + <code class="inline">d_03</code> + <code class="inline">d_04</code>)</div>
+    <div>Course folder: <code class="inline">ollama/</code> (<code class="inline">d_01</code> – <code class="inline">d_05</code>) · Vector DB: ChromaDB 1.5.9</div>
     <div>Compiled: September 2026, for spaced repetition</div>
   </div>
   <div class="filelist">
@@ -216,15 +217,19 @@
     <div><code>prefilter_vs_postfilter_*.py</code> — Existence leak from checking permission after search</div>
     <div><code>role_spoofing_*.py</code> — Trusting the role the client claims</div>
     <div><code>missing_metadata_*.py</code> — Fail-open vs. fail-closed on a missing ACL</div>
+    <div class="group-title">Vector DB pre-filtering (d_05)</div>
+    <div><code>vector-db-pre-filtering_*.py</code> — Permission as the ChromaDB query's <code>where</code>, not a post-filter</div>
   </div>
   <p style="margin-top:20px; font-size:10.2pt; color:#555;">
     This is the running study note for everything in the <code class="inline">ollama/</code> folder, extended each
     day a new topic is added. <code class="inline">d_03</code> and <code class="inline">d_04</code> differ from
     <code class="inline">d_01</code>–<code class="inline">d_02</code>: their leaks come from an ordinary request
     hitting a missing boundary rather than an attacker crafting a clever prompt. <code class="inline">d_04</code>
-    (the latest addition) calls no model at all — its three RAG access-control exercises are decided entirely in
-    Python before retrieval results would reach one. Every "what actually happened" block is a real terminal
-    transcript: from the local model above for chapters 1–8, and from the deterministic scripts for chapters 9–11.
+    calls no model at all — its three RAG access-control exercises are decided entirely in Python before retrieval
+    results would reach one. <code class="inline">d_05</code> (the latest addition) takes <code class="inline">d_04</code>'s
+    pre-filter idea onto a real vector database: the permission check becomes a condition of the ChromaDB query
+    itself. Every "what actually happened" block is a real terminal transcript: from the local model above for
+    chapters 1–8, and from the deterministic scripts for chapters 9–12.
   </p>
 </div>
 
@@ -1212,9 +1217,146 @@ scoped = [doc for doc in CORPUS if doc.allowed_roles is not None and requester_r
   </blockquote>
 </section>
 
+<!-- ===================== CH 12: vector_db_prefilter ===================== -->
+<section class="chapter">
+  <h1 class="chtitle"><span class="num">12.</span>vector-db-pre-filtering_*.py — Putting the Access Filter Inside the Vector DB Query</h1>
+  <div class="filepath">ollama/d_05/vector-db-pre-filtering_vul.py, vector-db-pre-filtering_sec.py, vector-db-pre-filter-docs.json (submitted as 김기승-0930.zip)</div>
+
+  <h2>12.1 What this exercise is about</h2>
+  <p>
+    Chapter 9's "pre-filter" was a Python list comprehension: <code class="inline">scoped = [doc for doc in CORPUS if ...]</code>.
+    That only works because the whole corpus sits in the app's memory. A real vector database holds millions of
+    vectors the app never loads, so "filter first" has to mean something else: the permission condition travels
+    <em>inside the search request</em>, and the database only ever ranks documents the requester may see. This
+    mission makes exactly that comparison on ChromaDB — the same 13 documents and the same 4 questions go through a
+    path that filters in Python after <code class="inline">query()</code> returns, and a path that passes the filter
+    as <code class="inline">query(..., where=...)</code>. No course files were provided for this one; both scripts
+    were written for the mission, modeled on the <code class="inline">d_03</code>/<code class="inline">d_04</code>
+    fixtures and conventions.
+  </p>
+  <table class="threat">
+    <tr><th>Asset</th><td>Other tenants' and other departments' confidential documents (a contract discount, an HR salary plan, a promotion list) sharing one vector index</td></tr>
+    <tr><th>Trust boundary</th><td>ChromaDB ↔ the application. If permission is checked after <code>query()</code> returns, unauthorized text has already crossed into app memory — however correct the Python check is</td></tr>
+    <tr><th>Attacker capability</th><td>None required — ordinary authenticated users asking ordinary questions</td></tr>
+  </table>
+
+  <h2>12.2 Code analysis</h2>
+  <pre>{
+  "role_policy": {"employee": {"allowed_role": ["all", "employee"], "classification": ["public", "internal"]}, ...},
+  "documents":   [{"doc_id": "a-contract-secret", "text": "...",
+                   "metadata": {"tenant_id": "tenant_a", "allowed_role": "sales", "classification": "confidential"}}, ...],
+  "cases":       [{"case_id": "case2-role-starvation", "requester": {"tenant_id": "tenant_a", "role": "employee"},
+                   "query": "연봉 조정 관련 자료 있어?"}, ...]
+}</pre>
+  <div class="annot">
+    <span class="tag">code analysis</span>
+    One JSON file holds the documents, the permission policy, and the test cases, so the two scripts cannot drift
+    apart — the version-drift problem from <code class="inline">d_02</code>. The fixture deliberately reuses earlier
+    material: <code class="inline">d_03</code>'s tenant-A contract secret, <code class="inline">d_04</code>'s HR salary
+    plan, and <code class="inline">d_04</code>'s untagged legacy performance review (which has a
+    <code class="inline">tenant_id</code> and nothing else).
+  </div>
+  <pre>def embed(text):
+    chars = "".join(text.split())
+    vector = [0.0] * EMBED_DIM
+    for i in range(len(chars) - 1):
+        vector[zlib.crc32(chars[i:i+2].encode("utf-8")) % EMBED_DIM] += 1.0   # not hash(): it is re-seeded per process
+    ...                                                                        # then L2-normalize</pre>
+  <div class="annot">
+    <span class="tag">code analysis</span>
+    Chroma's default embedding model is English-only and would rank these Korean documents close to randomly, which
+    would make every result unexplainable. The mission compares <em>where the filter sits</em>, not embedding
+    quality, so both scripts compute a simple deterministic character-bigram vector themselves and hand it to Chroma.
+    Chroma still does the indexing and the <code class="inline">where</code> filtering. With unit vectors, Chroma's
+    default squared-L2 distance ranks the same as cosine similarity; 2.0 means zero shared bigrams.
+  </div>
+  <pre>raw = collection.query(query_embeddings=[embed(query)], n_results=TOP_K)       # vulnerable: no condition
+kept = [... if vulnerable_post_filter(meta, requester, role_policy)]             # Python decides afterwards
+
+result = collection.query(query_embeddings=[embed(query)], n_results=TOP_K,
+                          where={"$and": [{"tenant_id": {"$eq": requester["tenant_id"]}},
+                                          {"allowed_role": {"$in": policy["allowed_role"]}},
+                                          {"classification": {"$in": policy["classification"]}}]})   # secure</pre>
+  <div class="annot">
+    <span class="tag">code analysis</span>
+    The vulnerable post-filter re-creates two <code class="inline">d_04</code> weaknesses: a missing tag passes the
+    check (chapter 11's fail-open), and the reply lists which documents were dropped (chapter 9's existence leak).
+    The secure path builds <code class="inline">where</code> only from the server-verified session identity (chapter
+    10). Its Python permission check on the results is <em>verification, not filtering</em> — if
+    <code class="inline">where</code> were wrong, that check would fail an assert rather than quietly patch the result.
+  </div>
+  <div class="annot warn-block">
+    <span class="tag warn">fixture tuned on purpose — disclosed</span>
+    In the first version of the documents, the authorized salary-meeting notice shared the bigrams "관련" and "조정"
+    with the case 2 question and ranked first, so the vulnerable path lost only 2 of 3 slots. I reworded it to
+    "연봉 면담 일정" so case 2 shows the effect at full strength (0 of 3). The effect itself is not manufactured: once
+    the top <em>k</em> are unauthorized, a post-filter has nothing to fill those slots with. Only the placement in
+    this small index was arranged.
+  </div>
+
+  <div style="page-break-before: always;">
+  <h2>12.3 Exercise flow</h2>
+  <figure class="diagram wide">
+    <img src="{{IMG_VECTORDB}}" alt="vector-db-pre-filtering_*.py execution flow">
+    <figcaption>Figure 12. vector-db-pre-filtering_*.py — filter in code after search (vulnerable) vs. filter inside the ChromaDB query (secure)</figcaption>
+  </figure>
+  </div>
+
+  <h2 style="page-break-before: always;">12.4 What actually happened when I ran it</h2>
+  <div class="run-sample">[취약 경로] case2-role-starvation — tenant_a 일반 직원: 연봉 조정 관련 자료 있어?
+  DB가 앱에 넘긴 문서: ['b-salary-notice', 'a-hr-salary-review', 'a-hr-salary-criteria']
+  그중 권한 없는 문서(경계 침범): ['b-salary-notice', 'a-hr-salary-review', 'a-hr-salary-criteria']
+  최종 응답:
+    관련 문서 3건 중 3건(b-salary-notice, a-hr-salary-review, a-hr-salary-criteria)은 접근 권한이 없어 제외했습니다.
+
+요약 (취약 경로)
+| case | DB 반환 | 경계 침범 | 최종 응답 | 유출 | top-k 고갈 |
+| case1-cross-tenant | 3 | 2 | 1 | True | True |
+| case2-role-starvation | 3 | 3 | 0 | True | True |
+| case3-missing-metadata | 3 | 2 | 2 | True | True |
+| case4-authorized-control | 3 | 1 | 2 | True | True |
+
+[보안 경로] case2-role-starvation — 같은 요청자, 같은 질문
+  where: {'$and': [{'tenant_id': {'$eq': 'tenant_a'}}, {'allowed_role': {'$in': ['all', 'employee']}}, {'classification': {'$in': ['public', 'internal']}}]}
+  DB가 앱에 넘긴 문서: ['a-salary-schedule-notice', 'a-bonus-notice', 'a-it-onboarding']
+  거리(작을수록 가까움, 2.0 = 관련성 0): [1.8, 1.893, 2.0]
+
+요약 (보안 경로)
+| case | DB 반환 | 경계 침범 | 최종 응답 | 유출 | top-k 고갈 | 전수 top-k 일치 |
+| case1-cross-tenant | 3 | 0 | 3 | False | False | True |
+| case2-role-starvation | 3 | 0 | 3 | False | False | True |
+| case3-missing-metadata | 3 | 0 | 3 | False | False | True |
+| case4-authorized-control | 3 | 0 | 3 | False | False | True |</div>
+  <table class="compare">
+    <tr><th>Case</th><th>Vulnerable (post-filter in code)</th><th>Secure (<code>where</code> in the query)</th></tr>
+    <tr><td>1 · tenant_b employee asks about contract discounts</td><td>ChromaDB returns <strong>tenant A's contract secret</strong> to a tenant B request; the reply names it. 1 result left.</td><td>3 tenant B documents the requester may read.</td></tr>
+    <tr><td>2 · tenant_a employee asks about salary adjustments</td><td>Top 3 all unauthorized → <strong>0 results</strong>, though authorized salary documents rank 5th and 7th.</td><td>Salary-meeting notice, bonus notice, and one zero-relevance filler (distance 2.0).</td></tr>
+    <tr><td>3 · tenant_a employee asks for the promotion list</td><td>Untagged legacy doc passes the fail-open check → <strong>promotion list shown</strong>.</td><td>Untagged doc can't satisfy <code>$in</code> → excluded by ChromaDB itself (fail-closed, no extra code).</td></tr>
+    <tr><td>4 · control: tenant_a HR, same salary question</td><td>Gets both HR documents, but a tenant B doc crossed the boundary and is named; 2 results.</td><td>Both HR documents plus the notice — the filter opens for the right role, it doesn't just block.</td></tr>
+  </table>
+  <table class="compare" style="page-break-inside: avoid;">
+    <tr><th>Mutation of the secure script</th><th>Result</th></tr>
+    <tr><td>Unmodified</td><td>asserts pass</td></tr>
+    <tr><td><code>where</code> reduced to <code>tenant_id</code> only</td><td>assert fails: "권한 없는 문서가 DB 경계를 넘으면 안 된다"</td></tr>
+    <tr><td><code>where</code> removed</td><td>assert fails: same message</td></tr>
+  </table>
+  <blockquote class="note">
+    Two things this chapter adds that the earlier ones couldn't. First, the secure script compares Chroma's
+    <code class="inline">where</code> results with a top 3 computed by hand over only the authorized documents — they
+    matched in all four cases (compared by distance, since documents tied at 2.0 may swap order). If Chroma picked its
+    top 3 first and filtered afterwards, case 2 would have come back empty; it didn't. Second, unlike every
+    <code class="inline">d_04</code> secure path, the asserts here are computed from real results, and the mutation
+    table shows they fail when the filter is weakened. What <code class="inline">where</code> does <em>not</em> fix is
+    relevance: case 2's third result shares nothing with the question. Pre-filtering guarantees "the closest k
+    documents you may see," not "documents worth showing" — that needs a separate distance threshold. One ChromaDB
+    detail worth remembering: every <code class="inline">EphemeralClient()</code> in a single Python process shares one
+    in-memory store, so a test that runs the script twice in-process must delete the collection in between.
+  </blockquote>
+</section>
+
 <!-- ===================== WRAP-UP ===================== -->
 <section class="chapter">
-  <h1 class="chtitle"><span class="num">12.</span>Putting All Eleven Side by Side</h1>
+  <h1 class="chtitle"><span class="num">13.</span>Putting All Twelve Side by Side</h1>
 
   <table class="compare">
     <tr>
@@ -1289,13 +1431,19 @@ scoped = [doc for doc in CORPUS if doc.allowed_roles is not None and requester_r
       <td>Missing ACL treated as public (fail-open)</td>
       <td>Missing ACL treated as denied (fail-closed) — but nothing reports it</td>
     </tr>
+    <tr>
+      <td>vector-db-pre-filtering_*.py</td>
+      <td>Ordinary questions against one shared ChromaDB index of several tenants and roles</td>
+      <td>Query with no condition, filter in Python afterwards — unauthorized docs reach the app, top-k starves, untagged doc fails open</td>
+      <td>Permission passed as the query's <code>where</code> (<code>$eq</code>/<code>$in</code>) — ChromaDB ranks only authorized docs</td>
+    </tr>
   </table>
 
   <p>
-    The eleven exercises split into two families. The first five (<code class="inline">d_01</code>–<code
+    The twelve exercises split into two families. The first five (<code class="inline">d_01</code>–<code
     class="inline">d_02</code>) are <strong>adversarial</strong>: an attacker actively crafts a prompt, a document,
-    or a conversation to break a stated policy. The six from <code class="inline">d_03</code> and
-    <code class="inline">d_04</code> are <strong>structural</strong>: an ordinary request hits a missing boundary (no
+    or a conversation to break a stated policy. The seven from <code class="inline">d_03</code>–<code
+    class="inline">d_05</code> are <strong>structural</strong>: an ordinary request hits a missing boundary (no
     channel separation, no ACL, no memory ownership check, a permission check in the wrong place, a trusted client
     field, a missing tag) and the leak happens on its own. Role spoofing (chapter 10) sits between the two — it needs
     one deliberately edited field, but no cleverness beyond that. Both families point at the same underlying
@@ -1309,6 +1457,14 @@ scoped = [doc for doc in CORPUS if doc.allowed_roles is not None and requester_r
     exercises' own checks: every <code class="inline">d_04</code> secure path hard-codes
     <code class="inline">leaked=False</code>, so its assert cannot fail. The evidence that the defenses work came from
     comparing replies — a sensitive question must get the same answer as an unrelated one — not from the PASS line.
+  </p>
+  <p>
+    <code class="inline">d_05</code> carried <code class="inline">d_04</code>'s pre-filter onto a real vector
+    database and closed both of those gaps. "Before the model sees it" turned out to be too late a line to draw:
+    with a post-filter, unauthorized documents are already in the application's memory before any Python check runs,
+    so the right line is "before the database returns it." And its secure asserts are computed from what ChromaDB
+    actually returned, with a mutation test showing they fail when the <code class="inline">where</code> clause is
+    weakened — a PASS line that means something.
   </p>
   <p>
     The other repeated lesson, sharpened by today's bug: when this small model needs to say "I don't know" or "I
@@ -1332,8 +1488,9 @@ scoped = [doc for doc in CORPUS if doc.allowed_roles is not None and requester_r
     <code class="inline">memory_poisoning_leak_secure.py</code> — all run live against
     <code class="inline">huihui_ai/qwen2.5-abliterate:1.5b</code> via a local Ollama server; and
     <code class="inline">ollama/d_04/prefilter_vs_postfilter_*.py</code>, <code class="inline">role_spoofing_*.py</code>,
-    <code class="inline">missing_metadata_*.py</code> (with <code class="inline">rag_acl_common.py</code>), which are
-    deterministic and call no model. Raw terminal output is
+    <code class="inline">missing_metadata_*.py</code> (with <code class="inline">rag_acl_common.py</code>), and
+    <code class="inline">ollama/d_05/vector-db-pre-filtering_vul.py</code>, <code class="inline">vector-db-pre-filtering_sec.py</code>
+    (ChromaDB 1.5.9), which are deterministic and call no model. Raw terminal output is
     quoted verbatim in Korean (the language the exercises were written and run in); the surrounding analysis is
     written in English for repeated review. Build source for this PDF lives in
     <code class="inline">ollama/docs/study_notes_src/</code> (this file + <code class="inline">diagrams/*.mmd</code>),
