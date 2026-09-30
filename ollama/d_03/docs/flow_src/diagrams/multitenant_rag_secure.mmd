@@ -1,0 +1,37 @@
+flowchart TD
+    A([시작: python multitenant_rag_leak_secure.py]) --> B{"Ollama 연결 가능?"}
+    B -- 아니오 --> B1[안내 후 종료]
+    B -- 예 --> C["run_real('tenant_b', MULTITENANT_QUERY)"]
+
+    subgraph EXT["외부 참조 — 다른 소스코드"]
+    direction TB
+    EXT1["local_llm.py<br/>is_ollama_available(), ask_real(),<br/>DEFAULT_MODEL"]
+    EXT2["multitenant_rag_common.py<br/>CORPUS, keyword_search(), build_prompt()"]
+    EXT3["prompts.py<br/>MULTITENANT_QUERY,<br/>RAG_ANSWER_SYSTEM_INSTRUCTION"]
+    end
+
+    subgraph RR["run_real() 내부 — 함수 흐름(사각형) · 변수 흐름(화살표)"]
+    direction TB
+    V1["requester_tenant_id, query<br/>(매개변수로 전달받음)"] -->|"CORPUS 를 tenant_id 로 필터링"| V2["scoped_corpus"]
+    V2 -->|"keyword_search(query, scoped_corpus)"| V3["hits"]
+    V3 --> V4{"hits 가 비어있는가?"}
+    V4 -- 예 --> V5["출력 게이트:<br/>모델 호출 없이 고정 응답 반환"]
+    V4 -- 아니오 --> V6["build_prompt(hits, query)"]
+    V6 -->|"user_content"| V7["ask_real(RAG_ANSWER_SYSTEM_INSTRUCTION,<br/>user_content, model, temperature=0.2)"]
+    V7 -->|"result"| V8["exposed 판정<br/>('37%' 또는 '010-1234' 포함 여부)"]
+    end
+
+    C --> V1
+    V5 --> D([종료])
+    V8 --> D
+
+    EXT1 -.-> B
+    EXT1 -.-> V7
+    EXT2 -.-> V2
+    EXT2 -.-> V3
+    EXT2 -.-> V6
+    EXT3 -.-> C
+    EXT3 -.-> V7
+
+    style EXT fill:#FDF4FF,stroke:#E879F9,stroke-width:1px
+    style RR fill:#F0FDFA,stroke:#2DD4BF,stroke-width:1px

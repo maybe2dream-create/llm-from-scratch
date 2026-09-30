@@ -1,0 +1,24 @@
+flowchart TD
+    A([Start: multitenant_rag_leak_*.py]) --> B{Ollama reachable?}
+    B -- No --> B1[Print guidance and exit]
+    B -- Yes --> C["Requester asks about a contract<br/>discount and contact"]
+
+    C --> D1
+    C --> E1
+
+    subgraph V["Vulnerable path"]
+    direction TB
+    D1["Search the full corpus,<br/>call ask_real()"] --> D2["Check response for tenant-A secret"]
+    end
+
+    subgraph S["Secure path"]
+    direction TB
+    E1["Scope search to the requester's<br/>tenant_id before searching"] --> E2{"Any hits?"}
+    E2 -- No --> E3["Output gate: skip the model call,<br/>return a fixed no-answer"]
+    E2 -- Yes --> E4["call ask_real()"]
+    end
+
+    D2 --> F[Compare and print results]
+    E3 --> F
+    E4 --> F
+    F --> G([End])

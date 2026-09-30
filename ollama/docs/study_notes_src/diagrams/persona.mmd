@@ -1,0 +1,21 @@
+flowchart TD
+    A([Start: python persona_jailbreak.py]) --> B{Ollama reachable?}
+    B -- No --> B1[Print guidance and exit]
+    B -- Yes --> C["Build attacker input<br/>(DAN persona request)"]
+
+    C --> D1
+    C --> E1
+
+    subgraph V["Vulnerable path"]
+    direction TB
+    D1["Merge system + user into one message,<br/>call chat_messages()"] --> D2["Check response with _leaked()"]
+    end
+
+    subgraph S["Secure path"]
+    direction TB
+    E1["Build anchored_system, then call with<br/>system/user separated"] --> E2["Output gate: _leaked() check,<br/>block if leaked, else pass through"]
+    end
+
+    D2 --> F[Compare and print results]
+    E2 --> F
+    F --> G([End])

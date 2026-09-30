@@ -1,0 +1,21 @@
+flowchart TD
+    A([Start: python encoding_jailbreak.py]) --> B{Ollama reachable?}
+    B -- No --> B1[Print guidance and exit]
+    B -- Yes --> C["Base64-encode the hidden request"]
+
+    C --> D1
+    C --> E1
+
+    subgraph V["Vulnerable path"]
+    direction TB
+    D1["System prompt has no encoding defenses,<br/>call chat_messages()"] --> D2["Check response with _leaked()"]
+    end
+
+    subgraph S["Secure path"]
+    direction TB
+    E1["Add a do-not-trust-encoded-input rule,<br/>call chat_messages()"] --> E2["Output gate: _leaked() check,<br/>block if leaked, else pass through"]
+    end
+
+    D2 --> F[Compare and print results]
+    E2 --> F
+    F --> G([End])

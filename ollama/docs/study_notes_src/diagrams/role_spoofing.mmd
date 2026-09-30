@@ -1,0 +1,24 @@
+flowchart TD
+    A(["Start: role_spoofing_*.py"]) --> C["Request: session-abc123<br/>claims role = admin"]
+
+    C --> D1
+    C --> E1
+
+    subgraph V["Vulnerable path"]
+    direction TB
+    D1["Filter docs by claimed_role (admin)"] --> D2["keyword_search()"]
+    D2 --> D3["Returns admin-infra-secrets<br/>full text to a guest"]
+    end
+
+    subgraph S["Secure path"]
+    direction TB
+    E1["Look up SERVER_VERIFIED_SESSIONS<br/>[session_id]"] --> E2{"Session known?"}
+    E2 -- No --> E3["'인증되지 않은 세션입니다.'<br/>(fail-closed)"]
+    E2 -- "Yes: guest" --> E4["Filter docs by verified role;<br/>claimed_role ignored"]
+    E4 --> E5["keyword_search() → no hits<br/>'관련 문서를 찾을 수 없습니다.'"]
+    end
+
+    D3 --> F["Print verdict + assert"]
+    E3 --> F
+    E5 --> F
+    F --> G([End])
