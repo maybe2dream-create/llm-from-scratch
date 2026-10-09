@@ -236,18 +236,11 @@ docs/LLMs-from-scratch-main/
 docs/LLMs-from-scratch-main.zip
 # PDF는 바이너리라 diff가 안 되고 갱신할 때마다 이력에 통째로 쌓인다.
 # 원본 .md만 커밋하고 PDF는 로컬에 둔다.
-# (기존 규칙 docs/*.pdf는 슬래시가 있어 저장소 루트의 docs/에만 적용되고
-# ollama/docs/, ollama/d_02/docs/ 같은 중첩 폴더는 놓쳤다 — **로 깊이 무관하게 적용)
+# (슬래시 없는 **로 깊이 무관하게 적용한다)
 **/docs/*.pdf
-# ollama/docs/study_notes_src/, ollama/d_03/docs/flow_src/: PDF 빌드 소스(report.html,
-# diagrams/*.mmd, build.py, print.js)는 커밋하되, npm 의존성과 렌더링 산출물
-# (SVG/최종 HTML/미리보기 PNG)은 재생성 가능하므로 제외한다.
 node_modules/
-ollama/docs/study_notes_src/report_final.html
-ollama/docs/study_notes_src/diagrams/*.svg
-ollama/docs/study_notes_src/preview/
-ollama/d_03/docs/flow_src/report_final.html
-ollama/d_03/docs/flow_src/diagrams/*.svg
-ollama/d_03/docs/flow_src/preview/
-# 미션 제출용 zip은 이미 커밋된 파일들의 바이너리 사본이다 (PDF와 같은 이유로 제외).
-ollama/**/*.zip
+
+# PDF 빌드 산출물. tools/pdf/*.py가 생성하며 언제든 다시 만들 수 있다.
+# tmp/pdfs/에는 수식·다이어그램 중간 PNG가, output/pdf/에는 완성된 PDF가 쌓인다.
+tmp/
+output/
