@@ -9,24 +9,27 @@ Sebastian Raschka, *Build a Large Language Model (From Scratch)*를 따라 GPT �
 | 장 | 내용 | 상태 |
 |---|---|---|
 | 2 | 토크나이저, BPE, 슬라이딩 윈도우, 토큰·위치 임베딩 | 완료 |
-| 3 | Self / Causal / Multi-head Attention | 구현 완료, `src/`로 이관 대기 |
-| 4 | LayerNorm, GELU, FFN, Transformer Block | 진행 중 |
+| 3 | Self / Causal / Multi-head Attention | 완료 (`MultiHeadAttention`은 `src/attention.py`) |
+| 4 | LayerNorm, GELU, FFN, Shortcut, Transformer Block, GPTModel, 텍스트 생성 | 완료 |
 | 5+ | 사전학습, 파인튜닝 | 미착수 |
 
-3장 Attention 구현(`SelfAttention_v1`, `SelfAttention_v2`, `CausalAttention`,
-`MultiHeadAttentionWrapper`, `MultiHeadAttention`)은 현재 `notebooks/03_attention.ipynb`
-안에만 있다. 4장 Transformer Block은 `MultiHeadAttention`을 import해 써야 하므로,
-그 전에 `src/attention.py`로 옮기는 일이 남아 있다.
+3장 Attention 구현 5종(`SelfAttention_v1`, `SelfAttention_v2`, `CausalAttention`,
+`MultiHeadAttentionWrapper`, `MultiHeadAttention`)은 `notebooks/03_attention.ipynb`에 있고,
+4장에서 다시 쓰는 `MultiHeadAttention`은 `src/attention.py`로 옮겨 import한다.
+4장 `GPTModel`(GPT-2 124M 구성, 파라미터 163,009,536개)은 학습 전 상태로
+"Hello, I am"을 "Hello, I am Featureiman Byeswickattribute argue"로 이어 쓴다(책과 일치).
 
 ## 구조
 
 ```
 src/            재사용하는 모듈 (import 대상)
   tokenizer.py    preprocess, build_vocab, SimpleTokenizerV1
+  attention.py    MultiHeadAttention (3장, 4장에서 import)
 tests/          src/에 대한 pytest
 notebooks/      장별 실습 노트북
   02_text_data.ipynb   2장 전체 파이프라인
-  03_attention.ipynb   3장 Attention 4종
+  03_attention.ipynb   3장 Attention 5종
+  04_gpt_model.ipynb   4장 LayerNorm · GELU · FFN · Shortcut · TransformerBlock · GPTModel · 텍스트 생성
   bpe.ipynb            BPE 토크나이저 실험
 experiments/    노트북에 넣기 전 단계의 습작. src/가 정식판이다.
   ch02/

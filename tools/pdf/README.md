@@ -22,6 +22,7 @@ uv run tools/pdf/token_positional_embeddings.py
 | `embed_exec_walkthrough.py` | `docs/Embed_Exec_Line_by_Line.pdf` | `embedding_exec/embed_exec.py` (코드는 파일에서 직접 읽음), `embed_exec.md` |
 | `self_attention_guide.py` | `docs/Self_Attention_Conceptual_Guide.pdf` | 붙여넣은 self-attention 개념 설명 (스크립트 안 `RAW_TEXT`) |
 | `attention_worked_example.py` | `docs/Self_Attention_Worked_Example.pdf` | 붙여넣은 "I love cats" 손계산 예제 + 검토 노트 (스크립트 안 `RAW_MD`, `NOTES`) |
+| `gpt_model_walkthrough.py` | `docs/Ch4_GPT_Model_Line_by_Line.pdf` | `notebooks/04_gpt_model.ipynb` (코드·출력을 노트북에서 직접 읽음) + 스크립트 안 줄별 해설 |
 
 ## 주의
 
@@ -31,3 +32,4 @@ uv run tools/pdf/token_positional_embeddings.py
 - `KeepTogether` 안에 또 `KeepTogether`를 넣으면 높이가 과하게 잡혀 매 절이 새 페이지로 넘어간다. 안쪽은 풀어서 넣는다.
 - `embed_exec_walkthrough.py`는 코드 줄을 `embed_exec.py`에서 직접 읽는다. 그 파일의 줄 번호가 바뀌면 설명의 줄 번호도 다시 맞춰야 한다.
 - `attention_worked_example.py`는 수식이 많아 ReportLab 대신 markdown → HTML(MathML) → 헤드리스 Google Chrome으로 PDF를 만든다. `/Applications/Google Chrome.app`이 있어야 하고, 네트워크는 쓰지 않는다.
+- `gpt_model_walkthrough.py`는 해설을 셀 번호·줄 번호에 묶어 두고, 각 셀의 첫 줄이 기록과 다르면 빌드를 멈춘다. 노트북 셀을 옮기거나 고치면 해설도 함께 맞춰야 한다. Chrome 방식(위와 같음).
