@@ -1,3 +1,12 @@
+# /// script
+# dependencies = ["reportlab", "matplotlib", "pillow"]
+# ///
+"""Attention 메커니즘(Self / Causal / Multi-head) 수식 해설 -> output/pdf/attention_mechanisms_ko.pdf
+
+Run from the repository root:  uv run tools/pdf/attention_mechanisms_ko.py
+
+수식은 matplotlib으로 PNG(tmp/pdfs/eq*.png)로 렌더해 PDF에 끼워 넣는다.
+"""
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont

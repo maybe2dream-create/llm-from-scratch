@@ -10,7 +10,9 @@ uv run tools/pdf/token_positional_embeddings.py
 ```
 
 - 각 파일 맨 위의 `# /// script` 블록에 의존성(`reportlab`)이 선언되어 있어서, `uv run`이 격리된 환경을 알아서 만든다. 프로젝트 `.venv`에는 아무것도 설치하지 않는다.
-- 출력 경로는 저장소 루트 기준이라 어느 폴더에서 실행해도 `docs/`에 생성된다.
+- 출력 경로는 저장소 루트 기준이라 어느 폴더에서 실행해도 `docs/`에 생성된다. 예외는
+  `attention_mechanisms_ko.py` — 경로를 `__file__` 대신 상대경로로 쓰므로 **저장소 루트에서** 실행해야
+  하고, 결과물도 `docs/`가 아니라 `output/pdf/`에 쓴다(`tmp/pdfs/`에 수식 PNG도 남긴다. 둘 다 gitignore).
 - 한글 표시를 위해 macOS 시스템 폰트 `AppleGothic.ttf`를 쓴다. 다른 OS에서는 각 스크립트의 `KOREAN_FONT` 경로를 바꿔야 한다.
 
 ## 스크립트와 결과물
@@ -19,10 +21,14 @@ uv run tools/pdf/token_positional_embeddings.py
 |---|---|---|
 | `chapter2_flowchart.py` | `docs/Chapter2_Pipeline_Flowchart.pdf` | 스크립트 안의 단계 정의 |
 | `token_positional_embeddings.py` | `docs/Token_and_Positional_Embeddings_Explained.pdf` | `docs/wiki/concepts/embedding-layer.md`, `positional-embedding.md` |
-| `embed_exec_walkthrough.py` | `docs/Embed_Exec_Line_by_Line.pdf` | `embedding_exec/embed_exec.py` (코드는 파일에서 직접 읽음), `embed_exec.md` |
+| `embed_exec_walkthrough.py` | `docs/Embed_Exec_Line_by_Line.pdf` | `experiments/ch02/embedding_exec/embed_exec.py` (코드는 파일에서 직접 읽음), `embed_exec.md` |
+| `python_class_structure.py` | `docs/Python_Class_Structure.pdf` | 스크립트 안의 예제 (출력은 실제 실행해 확인) |
+| `study_material.py` | `docs/Ch<N>_Flashcards_KR.pdf`, `docs/Ch<N>_Quiz_KR.pdf` | 스크립트 안의 문항 정의 |
+| `attention_mechanisms_ko.py` | `output/pdf/attention_mechanisms_ko.pdf` | 스크립트 안의 수식·설명 (matplotlib으로 수식 PNG 렌더) |
 | `self_attention_guide.py` | `docs/Self_Attention_Conceptual_Guide.pdf` | 붙여넣은 self-attention 개념 설명 (스크립트 안 `RAW_TEXT`) |
 | `attention_worked_example.py` | `docs/Self_Attention_Worked_Example.pdf` | 붙여넣은 "I love cats" 손계산 예제 + 검토 노트 (스크립트 안 `RAW_MD`, `NOTES`) |
 | `gpt_model_walkthrough.py` | `docs/Ch4_GPT_Model_Line_by_Line.pdf` | `notebooks/04_gpt_model.ipynb` (코드·출력을 노트북에서 직접 읽음) + 스크립트 안 줄별 해설 |
+| `src_walkthrough.py` | `docs/Src_Tokenizer_Line_by_Line.pdf`, `docs/Src_Attention_Line_by_Line.pdf` | `src/tokenizer.py`, `src/attention.py` (코드를 파일에서 직접 읽음) + 스크립트 안 줄별 해설 |
 
 ## 주의
 
@@ -33,3 +39,4 @@ uv run tools/pdf/token_positional_embeddings.py
 - `embed_exec_walkthrough.py`는 코드 줄을 `embed_exec.py`에서 직접 읽는다. 그 파일의 줄 번호가 바뀌면 설명의 줄 번호도 다시 맞춰야 한다.
 - `attention_worked_example.py`는 수식이 많아 ReportLab 대신 markdown → HTML(MathML) → 헤드리스 Google Chrome으로 PDF를 만든다. `/Applications/Google Chrome.app`이 있어야 하고, 네트워크는 쓰지 않는다.
 - `gpt_model_walkthrough.py`는 해설을 셀 번호·줄 번호에 묶어 두고, 각 셀의 첫 줄이 기록과 다르면 빌드를 멈춘다. 노트북 셀을 옮기거나 고치면 해설도 함께 맞춰야 한다. Chrome 방식(위와 같음).
+- `src_walkthrough.py`는 `gpt_model_walkthrough.py`의 스타일·도우미를 가져다 쓰고, 각 블록 첫 줄이 파일과 다르면 빌드를 멈춘다.
