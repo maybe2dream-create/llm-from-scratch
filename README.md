@@ -10,26 +10,37 @@ Sebastian Raschka, *Build a Large Language Model (From Scratch)*를 따라 GPT �
 |---|---|---|
 | 2 | 토크나이저, BPE, 슬라이딩 윈도우, 토큰·위치 임베딩 | 완료 |
 | 3 | Self / Causal / Multi-head Attention | 완료 (`MultiHeadAttention`은 `src/attention.py`) |
-| 4 | LayerNorm, GELU, FFN, Shortcut, Transformer Block, GPTModel, 텍스트 생성 | 완료 |
-| 5+ | 사전학습, 파인튜닝 | 미착수 |
+| 4 | LayerNorm, GELU, FFN, Shortcut, Transformer Block, GPTModel, 텍스트 생성 | 완료 (`src/gpt_model.py`) |
+| 5 | 사전학습 (unlabeled data) | 시작 |
+| 6+ | 파인튜닝 | 미착수 |
 
+**노트북은 장별 학습 기록이고, 다음 장에서 다시 쓰는 것만 `src/`로 옮겨 import한다.**
 3장 Attention 구현 5종(`SelfAttention_v1`, `SelfAttention_v2`, `CausalAttention`,
 `MultiHeadAttentionWrapper`, `MultiHeadAttention`)은 `notebooks/03_attention.ipynb`에 있고,
-4장에서 다시 쓰는 `MultiHeadAttention`은 `src/attention.py`로 옮겨 import한다.
-4장 `GPTModel`(GPT-2 124M 구성, 파라미터 163,009,536개)은 학습 전 상태로
-"Hello, I am"을 "Hello, I am Featureiman Byeswickattribute argue"로 이어 쓴다(책과 일치).
+4장이 쓰는 `MultiHeadAttention`만 `src/attention.py`에 있다. 같은 이유로 5장이 학습시킬
+4장 산출물(`GELU`, `LayerNorm`, `FeedForward`, `TransformerBlock`, `GPTModel`,
+`generate_text_simple`)은 `src/gpt_model.py`에 있다.
+
+학습 전 `GPTModel`(GPT-2 124M 구성, 파라미터 163,009,536개)은 "Hello, I am"을
+"Hello, I am Featureiman Byeswickattribute argue"로 이어 쓴다(책과 일치). 5장에서 이 모델을
+학습시키므로 이 출발점을 `tests/test_gpt_model.py`가 고정해 둔다.
 
 ## 구조
 
 ```
 src/            재사용하는 모듈 (import 대상)
   tokenizer.py    preprocess, build_vocab, SimpleTokenizerV1
-  attention.py    MultiHeadAttention (3장, 4장에서 import)
+  attention.py    MultiHeadAttention (3장 → 4장에서 import)
+  gpt_model.py    GELU, LayerNorm, FeedForward, TransformerBlock, GPTModel,
+                  generate_text_simple (4장 → 5장에서 import)
 tests/          src/에 대한 pytest
+  test_tokenizer.py   정규식 분리, 어휘, encode/decode 왕복
+  test_gpt_model.py   PyTorch 내장 구현과 대조 + 4장 기준값(파라미터 수·생성 결과) 고정
 notebooks/      장별 실습 노트북
   02_text_data.ipynb   2장 전체 파이프라인
   03_attention.ipynb   3장 Attention 5종
   04_gpt_model.ipynb   4장 LayerNorm · GELU · FFN · Shortcut · TransformerBlock · GPTModel · 텍스트 생성
+  05_pretraining.ipynb 5장 사전학습 (진행 중)
   bpe.ipynb            BPE 토크나이저 실험
 experiments/    노트북에 넣기 전 단계의 습작. src/가 정식판이다.
   ch02/
@@ -61,8 +72,10 @@ pytest                                                   # src/ 테스트
 
 `data/`가 비어 있으면 `experiments/ch02/raw_text.py`가 `the-verdict.txt`를 자동으로 받는다.
 
-`tools/pdf/*.py`는 `reportlab`, `matplotlib`, `Pillow`가 필요하고 macOS 시스템 한글 폰트
-경로를 참조한다. 현재 `.venv`에는 `reportlab`이 없어 PDF를 다시 만들려면 먼저 설치해야 한다.
+`tools/pdf/*.py`는 `uv run tools/pdf/<파일>.py`로 돌린다. 각 스크립트 맨 위 `# /// script`
+블록에 의존성이 선언돼 있어 `uv`가 격리된 환경을 만들고, 프로젝트 `.venv`에는 아무것도
+설치하지 않는다. macOS 시스템 한글 폰트 경로를 참조하며, 일부는 PDF 변환에
+`/Applications/Google Chrome.app`을 쓴다. 자세한 내용은 `tools/pdf/README.md`.
 
 ## 기록
 
