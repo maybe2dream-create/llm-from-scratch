@@ -12,7 +12,8 @@ Sebastian Raschka, *Build a Large Language Model (From Scratch)*를 따라 GPT �
 | 3 | Self / Causal / Multi-head Attention | 완료 (`MultiHeadAttention`은 `src/attention.py`) |
 | 4 | LayerNorm, GELU, FFN, Shortcut, Transformer Block, GPTModel, 텍스트 생성 | 완료 (`src/gpt_model.py`) |
 | 5 | 사전학습, 디코딩 전략(temperature·top-k), OpenAI GPT-2 가중치 로드 | 완료 (`src/dataset.py`) |
-| 6+ | 파인튜닝 | 미착수 |
+| 6 | 분류 파인튜닝 (SMS 스팸 분류) | 시작 |
+| 7 | 지시 파인튜닝 | 미착수 |
 
 **노트북은 장별 학습 기록이고, 다음 장에서 다시 쓰는 것만 `src/`로 옮겨 import한다.**
 3장 Attention 구현 5종(`SelfAttention_v1`, `SelfAttention_v2`, `CausalAttention`,
@@ -42,6 +43,7 @@ notebooks/      장별 실습 노트북
   03_attention.ipynb   3장 Attention 5종
   04_gpt_model.ipynb   4장 LayerNorm · GELU · FFN · Shortcut · TransformerBlock · GPTModel · 텍스트 생성
   05_pretraining.ipynb 5장 사전학습 · 디코딩 전략 · GPT-2 가중치 로드
+  06_classification.ipynb 6장 분류 파인튜닝 (진행 중)
   gpt_download.py      GPT-2 가중치 다운로더 — Raschka 코드(Apache 2.0, 내 작업물 아님)
   LICENSE-gpt_download.txt  위 파일에만 적용되는 라이선스 사본
   bpe.ipynb            BPE 토크나이저 실험
