@@ -11,7 +11,7 @@ Sebastian Raschka, *Build a Large Language Model (From Scratch)*를 따라 GPT �
 | 2 | 토크나이저, BPE, 슬라이딩 윈도우, 토큰·위치 임베딩 | 완료 |
 | 3 | Self / Causal / Multi-head Attention | 완료 (`MultiHeadAttention`은 `src/attention.py`) |
 | 4 | LayerNorm, GELU, FFN, Shortcut, Transformer Block, GPTModel, 텍스트 생성 | 완료 (`src/gpt_model.py`) |
-| 5 | 사전학습 (unlabeled data) | 시작 |
+| 5 | 사전학습, 디코딩 전략(temperature·top-k), OpenAI GPT-2 가중치 로드 | 완료 (`src/dataset.py`) |
 | 6+ | 파인튜닝 | 미착수 |
 
 **노트북은 장별 학습 기록이고, 다음 장에서 다시 쓰는 것만 `src/`로 옮겨 import한다.**
@@ -33,6 +33,7 @@ src/            재사용하는 모듈 (import 대상)
   attention.py    MultiHeadAttention (3장 → 4장에서 import)
   gpt_model.py    GELU, LayerNorm, FeedForward, TransformerBlock, GPTModel,
                   generate_text_simple (4장 → 5장에서 import)
+  dataset.py      GPTDatasetV1, create_dataloader_v1 (2장 → 5장에서 import)
 tests/          src/에 대한 pytest
   test_tokenizer.py   정규식 분리, 어휘, encode/decode 왕복
   test_gpt_model.py   PyTorch 내장 구현과 대조 + 4장 기준값(파라미터 수·생성 결과) 고정
@@ -40,13 +41,16 @@ notebooks/      장별 실습 노트북
   02_text_data.ipynb   2장 전체 파이프라인
   03_attention.ipynb   3장 Attention 5종
   04_gpt_model.ipynb   4장 LayerNorm · GELU · FFN · Shortcut · TransformerBlock · GPTModel · 텍스트 생성
-  05_pretraining.ipynb 5장 사전학습 (진행 중)
+  05_pretraining.ipynb 5장 사전학습 · 디코딩 전략 · GPT-2 가중치 로드
+  gpt_download.py      GPT-2 가중치 다운로더 — Raschka 코드(Apache 2.0, 내 작업물 아님)
+  LICENSE-gpt_download.txt  위 파일에만 적용되는 라이선스 사본
   bpe.ipynb            BPE 토크나이저 실험
 experiments/    노트북에 넣기 전 단계의 습작. src/가 정식판이다.
   ch02/
     SimpleTokenizerV2.py  <UNK>·<|endoftext|> 처리를 붙인 초기 버전
     raw_text.py           정규식 토크나이저 + 어휘 구축
-    embedding_exec/       Annabel Lee로 2장 파이프라인 재실행
+    embedding_exec/       Annabel Lee로 2장 파이프라인 재실행 (02_text_data.ipynb도 여기
+                          annabel_lee.txt를 읽는다)
 scripts/        유틸리티
   check_env.py    설치된 패키지·디바이스 확인
 tools/pdf/      학습 자료 PDF 생성기 (reportlab). docs/의 PDF를 만든다.
