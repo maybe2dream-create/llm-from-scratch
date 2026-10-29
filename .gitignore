@@ -224,6 +224,7 @@ data/
 checkpoints/
 runs/
 *.pt
+*.pth
 *.bin
 *.safetensors
 .DS_Store
@@ -231,6 +232,8 @@ runs/
 # --- 프로젝트 고유 ---
 # raw_text.py가 저장소 루트에 받는 코퍼스 사본 (정본은 data/)
 /the-verdict.txt
+# 5장에서 내려받는 OpenAI GPT-2 가중치 (477MB) — gpt_download.py로 언제든 다시 받을 수 있다
+notebooks/gpt2/
 # Raschka 공식 저장소 원본 — 참조용이며 내 작업물이 아니다
 docs/LLMs-from-scratch-main/
 docs/LLMs-from-scratch-main.zip
