@@ -247,3 +247,16 @@ node_modules/
 # tmp/pdfs/에는 수식·다이어그램 중간 PNG가, output/pdf/에는 완성된 PDF가 쌓인다.
 tmp/
 output/
+
+# 6장 데이터셋 (UCI SMS Spam Collection, CC BY 4.0). 06_classification.ipynb가 내려받고
+# train/validation/test.csv로 나눠 저장하므로 언제든 다시 만들 수 있다.
+notebooks/sms_spam_collection/
+notebooks/sms_spam_collection.zip
+notebooks/train.csv
+notebooks/validation.csv
+notebooks/test.csv
+# 6장 학습 곡선 그래프 (노트북 실행 시 생성)
+notebooks/*_plot.pdf
+
+# 이 저장소와 무관한 별도 실습 (.env 포함) — 커밋하지 않는다
+experiments/team_3tier_minimal/

@@ -96,6 +96,15 @@ class GPTModel(nn.Module):
         return logits
 
 
+def text_to_token_ids(text, tokenizer):
+    encoded = tokenizer.encode(text, allowed_special={"<|endoftext|>"})
+    return torch.tensor(encoded, dtype=torch.long).unsqueeze(0)
+
+
+def token_ids_to_text(token_ids, tokenizer):
+    return tokenizer.decode(token_ids.squeeze(0).tolist())
+
+
 def generate_text_simple(model, idx, max_new_tokens, context_size):
     for _ in range(max_new_tokens):
         idx_cond = idx[:, -context_size:]
